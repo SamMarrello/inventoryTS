@@ -10,3 +10,81 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Customer {
+  id Int @id @default(autoincrement())
+  name String 
+  password String
+  username String @unique
+  orders Order[]
+}
+
+model Controller {
+  id Int @id @default(autoincrement())
+  name String
+  password String
+  username String @unique
+  warehouse Warehouse?
+  employees Employee[]
+  orders Order[]
+}
+
+model Employee {
+  id Int @id @default(autoincrement())
+  name String 
+  password String 
+  username String @unique
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id])
+  warehouseId Int
+  reportsTo Controller @relation(fields: [controllerId], references: [id])
+  controllerId Int 
+  orders Order[]
+}
+
+model Warehouse {
+  id Int @id @default(autoincrement())
+  name String 
+  address String 
+  controller Controller @relation(fields: [controllerId], references: [id])
+  controllerId Int @unique
+  employees Employee[]
+  items WarehouseInventory[]
+}
+
+model Item {
+  id Int @id @default(autoincrement())
+  name String 
+  amount BigInt
+  costPerUnit Decimal
+  locations WarehouseInventory[]
+  orders OrderItems[]
+}
+
+model WarehouseInventory {
+  warehouse Warehouse @relation(fields: [warehouseId], references: [id])
+  warehouseId Int 
+  item Item @relation(fields: [itemId], references: [id])
+  itemId Int
+  @@id([warehouseId, itemId])
+}
+
+model Order {
+  id Int @id @default(autoincrement())
+  assignedBy Controller @relation(fields: [controllerId], references: [id])
+  controllerId Int
+  assignedTo Employee @relation(fields: [employeeId], references: [id])
+  employeeId Int
+  customer Customer @relation(fields: [customerId], references: [id])
+  customerId Int 
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+  inventory OrderItems[]
+}
+
+model OrderItems {
+  item Item @relation(fields: [itemId], references: [id])
+  itemId Int 
+  quantity BigInt
+  order Order @relation(fields: [orderId], references: [id])
+  orderId Int 
+  @@id([itemId, orderId])
+}
